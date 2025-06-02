@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다문화 가정을 위한 한국어 어휘 학습 도구</title>
+    
+    <!-- PWA 설정 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="한국어 학습">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#667eea">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .language-section {
+            margin-bottom: 25px;
+        }
+
+        .language-label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .language-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-item:hover {
+            border-color: #667eea;
+            background: #f7f7ff;
+        }
+
+        .language-item.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .language-item input {
+            margin-right: 8px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .word-info {
+            background: linear-gradient(135deg, #f7f7ff 0%, #f0f0ff 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .word-title {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .word-pronunciation {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .word-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            padding: 6px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .word-meaning {
+            font-size: 18px;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .example-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .translations-section h3 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .translations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .translation-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .translation-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .translation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .flag {
+            font-size: 28px;
+            margin-right: 12px;
+        }
+
+        .language-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .translation-word {
+            font-size: 26px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .translation-pronunciation {
+            font-size: 16px;
+            color: #888;
+            font-style: italic;
+        }
+
+        .available-words {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .available-words h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .category-section {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .word-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .word-button {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .word-button:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌏 다문화 가정을 위한 한국어 어휘 학습 도구</h1>
+        <p class="subtitle">한국어 단어의 의미를 분석하고 다국어로 번역해드립니다</p>
+        
+        <div class="search-section">
+            <div class="language-section">
+                <label class="language-label">번역할 언어를 선택하세요 (복수 선택 가능):</label>
+                <div class="language-grid">
+                    <label class="language-item" id="lang-en">
+                        <input type="checkbox" value="en" checked>
+                        <span>🇺🇸 영어</span>
+                    </label>
+                    <label class="language-item" id="lang-zh">
+                        <input type="checkbox" value="zh">
+                        <span>🇨🇳 중국어</span>
+                    </label>
+                    <label class="language-item" id="lang-vi">
+                        <input type="checkbox" value="vi">
+                        <span>🇻🇳 베트남어</span>
+                    </label>
+                    <label class="language-item" id="lang-th">
+                        <input type="checkbox" value="th">
+                        <span>🇹🇭 태국어</span>
+                    </label>
+                    <label class="language-item" id="lang-ja">
+                        <input type="checkbox" value="ja">
+                        <span>🇯🇵 일본어</span>
+                    </label>
+                    <label class="language-item" id="lang-mn">
+                        <input type="checkbox" value="mn">
+                        <span>🇲🇳 몽골어</span>
+                    </label>
+                    <label class="language-item" id="lang-ru">
+                        <input type="checkbox" value="ru">
+                        <span>🇷🇺 러시아어</span>
+                    </label>
+                    <label class="language-item" id="lang-uz">
+                        <input type="checkbox" value="uz">
+                        <span>🇺🇿 우즈벡어</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="한국어 단어를 입력하세요 (예: 학교, 가족, 친구)">
+            </div>
+            
+            <button onclick="searchWord()" class="search-button">번역하기</button>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <div id="resultsSection" class="results-section">
+            <div id="wordInfo" class="word-info"></div>
+            <div class="translations-section">
+                <h3>📚 다국어 번역</h3>
+                <div id="translationsGrid" class="translations-grid"></div>
+            </div>
+        </div>
+        
+        <div class="available-words">
+            <h3>📌 현재 사용 가능한 단어들</h3>
+            <div id="availableWords"></div>
+        </div>
+    </div>
+
+    <script>
+        // 한국어 어휘 데이터베이스
+        const vocabulary = {
+            '학교': {
+                pronunciation: '학교 [학꾜]',
+                type: '명사',
+                category: '교육',
+                meaning: '학생들이 교육을 받는 기관',
+                example: '나는 매일 학교에 갑니다.',
+                translations: {
+                    en: { word: 'school', pronunciation: 'skool' },
+                    zh: { word: '学校', pronunciation: 'xuéxiào' },
+                    vi: { word: 'trường học', pronunciation: 'chường học' },
+                    th: { word: 'โรงเรียน', pronunciation: 'roong-rian' },
+                    ja: { word: '学校', pronunciation: 'gakkou' },
+                    mn: { word: 'сургууль', pronunciation: 'surguuli' },
+                    ru: { word: 'школа', pronunciation: 'shkola' },
+                    uz: { word: 'maktab', pronunciation: 'maktab' }
+                }
+            },
+            '가족': {
+                pronunciation: '가족 [가족]',
+                type: '명사',
+                category: '가정',
+                meaning: '부모와 자녀 등 혈연관계로 이루어진 공동체',
+                example: '우리 가족은 다섯 명입니다.',
+                translations: {
+                    en: { word: 'family', pronunciation: 'fæmili' },
+                    zh: { word: '家人', pronunciation: 'jiārén' },
+                    vi: { word: 'gia đình', pronunciation: 'za đình' },
+                    th: { word: 'ครอบครัว', pronunciation: 'khrɔ̂ɔp-khrua' },
+                    ja: { word: '家族', pronunciation: 'kazoku' },
+                    mn: { word: 'гэр бүл', pronunciation: 'ger bül' },
+                    ru: { word: 'семья', pronunciation: 'sem\'ya' },
+                    uz: { word: 'oila', pronunciation: 'oila' }
+                }
+            },
+            '친구': {
+                pronunciation: '친구 [친구]',
+                type: '명사',
+                category: '인간관계',
+                meaning: '서로 친하게 지내는 사람',
+                example: '나는 학교에서 새로운 친구를 만났습니다.',
+                translations: {
+                    en: { word: 'friend', pronunciation: 'frend' },
+                    zh: { word: '朋友', pronunciation: 'péngyǒu' },
+                    vi: { word: 'bạn bè', pronunciation: 'bạn bè' },
+                    th: { word: 'เพื่อน', pronunciation: 'phɯ̂an' },
+                    ja: { word: '友達', pronunciation: 'tomodachi' },
+                    mn: { word: 'найз', pronunciation: 'naiz' },
+                    ru: { word: 'друг', pronunciation: 'drug' },
+                    uz: { word: 'do\'st', pronunciation: 'do\'st' }
+                }
+            },
+            '선생님': {
+                pronunciation: '선생님 [선생님]',
+                type: '명사',
+                category: '교육',
+                meaning: '학생을 가르치는 사람',
+                example: '선생님께서 수업을 시작하셨습니다.',
+                translations: {
+                    en: { word: 'teacher', pronunciation: 'tiːtʃər' },
+                    zh: { word: '老师', pronunciation: 'lǎoshī' },
+                    vi: { word: 'giáo viên', pronunciation: 'záo viên' },
+                    th: { word: 'ครู', pronunciation: 'khruu' },
+                    ja: { word: '先生', pronunciation: 'sensei' },
+                    mn: { word: 'багш', pronunciation: 'bagsh' },
+                    ru: { word: 'учитель', pronunciation: 'uchitel\'' },
+                    uz: { word: 'o\'qituvchi', pronunciation: 'o\'qituvchi' }
+                }
+            },
+            '사랑': {
+                pronunciation: '사랑 [사랑]',
+                type: '명사',
+                category: '감정',
+                meaning: '어떤 사람이나 대상을 몹시 아끼고 귀중히 여기는 마음',
+                example: '부모님의 사랑은 무조건적입니다.',
+                translations: {
+                    en: { word: 'love', pronunciation: 'lʌv' },
+                    zh: { word: '爱', pronunciation: 'ài' },
+                    vi: { word: 'tình yêu', pronunciation: 'tình yêu' },
+                    th: { word: 'ความรัก', pronunciation: 'khwaam-rák' },
+                    ja: { word: '愛', pronunciation: 'ai' },
+                    mn: { word: 'хайр', pronunciation: 'khair' },
+                    ru: { word: 'любовь', pronunciation: 'lyubov\'' },
+                    uz: { word: 'sevgi', pronunciation: 'sevgi' }
+                }
+            },
+            '공부': {
+                pronunciation: '공부 [공부]',
+                type: '명사',
+                category: '교육',
+                meaning: '학문이나 기술을 배우고 익힘',
+                example: '매일 열심히 공부해야 합니다.',
+                translations: {
+                    en: { word: 'study', pronunciation: 'stʌdi' },
+                    zh: { word: '学习', pronunciation: 'xuéxí' },
+                    vi: { word: 'học tập', pronunciation: 'học tập' },
+                    th: { word: 'การเรียน', pronunciation: 'gaan-rian' },
+                    ja: { word: '勉強', pronunciation: 'benkyou' },
+                    mn: { word: 'суралцах', pronunciation: 'suraltsakh' },
+                    ru: { word: 'учёба', pronunciation: 'uchyoba' },
+                    uz: { word: 'o\'qish', pronunciation: 'o\'qish' }
+                }
+            },
+            '음식': {
+                pronunciation: '음식 [음식]',
+                type: '명사',
+                category: '일상생활',
+                meaning: '사람이 먹을 수 있도록 만든 것',
+                example: '한국 음식은 매우 맛있습니다.',
+                translations: {
+                    en: { word: 'food', pronunciation: 'fuːd' },
+                    zh: { word: '食物', pronunciation: 'shíwù' },
+                    vi: { word: 'thức ăn', pronunciation: 'thức ăn' },
+                    th: { word: 'อาหาร', pronunciation: 'aa-hǎan' },
+                    ja: { word: '食べ物', pronunciation: 'tabemono' },
+                    mn: { word: 'хоол', pronunciation: 'khool' },
+                    ru: { word: 'еда', pronunciation: 'yeda' },
+                    uz: { word: 'ovqat', pronunciation: 'ovqat' }
+                }
+            },
+            '집': {
+                pronunciation: '집 [집]',
+                type: '명사',
+                category: '일상생활',
+                meaning: '사람이 살기 위하여 지은 건물',
+                example: '우리 집은 학교 근처에 있습니다.',
+                translations: {
+                    en: { word: 'house/home', pronunciation: 'haʊs/hoʊm' },
+                    zh: { word: '家', pronunciation: 'jiā' },
+                    vi: { word: 'nhà', pronunciation: 'nhà' },
+                    th: { word: 'บ้าน', pronunciation: 'bâan' },
+                    ja: { word: '家', pronunciation: 'ie' },
+                    mn: { word: 'гэр', pronunciation: 'ger' },
+                    ru: { word: 'дом', pronunciation: 'dom' },
+                    uz: { word: 'uy', pronunciation: 'uy' }
+                }
+            },
+            '한국': {
+                pronunciation: '한국 [한국]',
+                type: '명사',
+                category: '지리',
+                meaning: '대한민국의 줄임말',
+                example: '한국은 아름다운 나라입니다.',
+                translations: {
+                    en: { word: 'Korea', pronunciation: 'kəˈriːə' },
+                    zh: { word: '韩国', pronunciation: 'hánguó' },
+                    vi: { word: 'Hàn Quốc', pronunciation: 'Hàn Quốc' },
+                    th: { word: 'เกาหลี', pronunciation: 'gao-lǐi' },
+                    ja: { word: '韓国', pronunciation: 'kankoku' },
+                    mn: { word: 'Солонгос', pronunciation: 'Solongos' },
+                    ru: { word: 'Корея', pronunciation: 'Koreya' },
+                    uz: { word: 'Koreya', pronunciation: 'Koreya' }
+                }
+            },
+            '일': {
+                pronunciation: '일 [일]',
+                type: '명사',
+                category: '직업',
+                meaning: '어떤 목적을 위해 하는 활동이나 직업',
+                example: '아버지는 회사에서 일을 합니다.',
+                translations: {
+                    en: { word: 'work/job', pronunciation: 'wɜːrk/dʒɑːb' },
+                    zh: { word: '工作', pronunciation: 'gōngzuò' },
+                    vi: { word: 'công việc', pronunciation: 'công việc' },
+                    th: { word: 'งาน', pronunciation: 'ngaan' },
+                    ja: { word: '仕事', pronunciation: 'shigoto' },
+                    mn: { word: 'ажил', pronunciation: 'ajil' },
+                    ru: { word: 'работа', pronunciation: 'rabota' },
+                    uz: { word: 'ish', pronunciation: 'ish' }
+                }
+            },
+            '안녕하세요': {
+                pronunciation: '안녕하세요 [안녕하세요]',
+                type: '인사말',
+                category: '인사',
+                meaning: '만났을 때 하는 인사',
+                example: '안녕하세요, 만나서 반갑습니다.',
+                translations: {
+                    en: { word: 'Hello', pronunciation: 'həˈloʊ' },
+                    zh: { word: '你好', pronunciation: 'nǐ hǎo' },
+                    vi: { word: 'Xin chào', pronunciation: 'sin chào' },
+                    th: { word: 'สวัสดี', pronunciation: 'sà-wàt-dii' },
+                    ja: { word: 'こんにちは', pronunciation: 'konnichiwa' },
+                    mn: { word: 'сайн байна уу', pronunciation: 'sain baina uu' },
+                    ru: { word: 'привет', pronunciation: 'privet' },
+                    uz: { word: 'salom', pronunciation: 'salom' }
+                }
+            },
+            '감사합니다': {
+                pronunciation: '감사합니다 [감사함니다]',
+                type: '인사말',
+                category: '인사',
+                meaning: '고마움을 표현하는 말',
+                example: '도와주셔서 감사합니다.',
+                translations: {
+                    en: { word: 'Thank you', pronunciation: 'θæŋk juː' },
+                    zh: { word: '谢谢', pronunciation: 'xièxie' },
+                    vi: { word: 'Cảm ơn', pronunciation: 'kảm ơn' },
+                    th: { word: 'ขอบคุณ', pronunciation: 'khɔ̀ɔp-khun' },
+                    ja: { word: 'ありがとう', pronunciation: 'arigatou' },
+                    mn: { word: 'баярлалаа', pronunciation: 'bayarlalaa' },
+                    ru: { word: 'спасибо', pronunciation: 'spasibo' },
+                    uz: { word: 'rahmat', pronunciation: 'rahmat' }
+                }
+            },
+            '체류': {
+                pronunciation: '체류 [체류]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '다른 나라에 일정 기간 머물러 있음',
+                example: '체류 기간을 연장하려면 출입국사무소에 가야 합니다.',
+                translations: {
+                    en: { word: 'stay/residence', pronunciation: 'steɪ/ˈrezɪdəns' },
+                    zh: { word: '滞留', pronunciation: 'zhìliú' },
+                    vi: { word: 'lưu trú', pronunciation: 'lưu trú' },
+                    th: { word: 'การพำนัก', pronunciation: 'gaan-pham-nák' },
+                    ja: { word: '滞在', pronunciation: 'taizai' },
+                    mn: { word: 'оршин суух', pronunciation: 'orshin suukh' },
+                    ru: { word: 'пребывание', pronunciation: 'prebyvanie' },
+                    uz: { word: 'yashash', pronunciation: 'yashash' }
+                }
+            },
+            '비자': {
+                pronunciation: '비자 [비자]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '외국인이 그 나라에 입국할 수 있는 허가증',
+                example: '한국에서 일하려면 취업 비자가 필요합니다.',
+                translations: {
+                    en: { word: 'visa', pronunciation: 'ˈviːzə' },
+                    zh: { word: '签证', pronunciation: 'qiānzhèng' },
+                    vi: { word: 'thị thực', pronunciation: 'thị thực' },
+                    th: { word: 'วีซ่า', pronunciation: 'wii-sâa' },
+                    ja: { word: 'ビザ', pronunciation: 'biza' },
+                    mn: { word: 'виз', pronunciation: 'viz' },
+                    ru: { word: 'виза', pronunciation: 'viza' },
+                    uz: { word: 'viza', pronunciation: 'viza' }
+                }
+            },
+            '외국인등록증': {
+                pronunciation: '외국인등록증 [외구긴등록쯩]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '한국에 장기 체류하는 외국인의 신분증',
+                example: '외국인등록증은 항상 소지해야 합니다.',
+                translations: {
+                    en: { word: 'Alien Registration Card', pronunciation: 'eɪliən ˌredʒɪˈstreɪʃən kɑːrd' },
+                    zh: { word: '外国人登录证', pronunciation: 'wàiguórén dēnglùzhèng' },
+                    vi: { word: 'thẻ đăng ký người nước ngoài', pronunciation: 'thẻ đăng ký người nước ngoài' },
+                    th: { word: 'บัตรทะเบียนคนต่างด้าว', pronunciation: 'bàt-thá-bian-khon-tàang-dâao' },
+                    ja: { word: '外国人登録証', pronunciation: 'gaikokujin touroku shou' },
+                    mn: { word: 'гадаадын иргэний үнэмлэх', pronunciation: 'gadaadyn irgenii ünemlekh' },
+                    ru: { word: 'карта регистрации иностранца', pronunciation: 'karta registratsii inostrantsa' },
+                    uz: { word: 'chet ellik ro\'yxat guvohnomasi', pronunciation: 'chet ellik ro\'yxat guvohnomasi' }
+                }
+            },
+            '주민센터': {
+                pronunciation: '주민센터 [주민센터]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '동사무소, 주민들의 행정 업무를 처리하는 곳',
+                example: '전입신고는 주민센터에서 할 수 있습니다.',
+                translations: {
+                    en: { word: 'Community Center', pronunciation: 'kəˈmjuːnəti ˈsentər' },
+                    zh: { word: '居民中心', pronunciation: 'jūmín zhōngxīn' },
+                    vi: { word: 'trung tâm hành chính', pronunciation: 'trung tâm hành chính' },
+                    th: { word: 'ศูนย์ชุมชน', pronunciation: 'sǔun-chum-chon' },
+                    ja: { word: '住民センター', pronunciation: 'juumin sentaa' },
+                    mn: { word: 'иргэдийн төв', pronunciation: 'irgediin töv' },
+                    ru: { word: 'районный центр', pronunciation: 'rayonnyy tsentr' },
+                    uz: { word: 'fuqarolar markazi', pronunciation: 'fuqarolar markazi' }
+                }
+            },
+            '건강보험': {
+                pronunciation: '건강보험 [건강보험]',
+                type: '명사',
+                category: '의료/복지',
+                meaning: '병원비를 지원받기 위한 의무 보험',
+                example: '한국에서는 건강보험에 가입해야 합니다.',
+                translations: {
+                    en: { word: 'Health Insurance', pronunciation: 'helθ ɪnˈʃʊrəns' },
+                    zh: { word: '健康保险', pronunciation: 'jiànkāng bǎoxiǎn' },
+                    vi: { word: 'bảo hiểm y tế', pronunciation: 'bảo hiểm y tế' },
+                    th: { word: 'ประกันสุขภาพ', pronunciation: 'prà-gan-sùk-khà-phâap' },
+                    ja: { word: '健康保険', pronunciation: 'kenkou hoken' },
+                    mn: { word: 'эрүүл мэндийн даатгал', pronunciation: 'erüül mendiin daatgal' },
+                    ru: { word: 'медицинская страховка', pronunciation: 'meditsinskaya strakhovka' },
+                    uz: { word: 'tibbiy sug\'urta', pronunciation: 'tibbiy sug\'urta' }
+                }
+            },
+            '계약서': {
+                pronunciation: '계약서 [계약써]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '약속한 내용을 적은 문서',
+                example: '집을 빌릴 때는 계약서를 꼭 확인하세요.',
+                translations: {
+                    en: { word: 'contract', pronunciation: 'ˈkɑːntrækt' },
+                    zh: { word: '合同', pronunciation: 'hétong' },
+                    vi: { word: 'hợp đồng', pronunciation: 'hợp đồng' },
+                    th: { word: 'สัญญา', pronunciation: 'sǎn-yaa' },
+                    ja: { word: '契約書', pronunciation: 'keiyakusho' },
+                    mn: { word: 'гэрээ', pronunciation: 'geree' },
+                    ru: { word: 'договор', pronunciation: 'dogovor' },
+                    uz: { word: 'shartnoma', pronunciation: 'shartnoma' }
+                }
+            },
+            '보증금': {
+                pronunciation: '보증금 [보증금]',
+                type: '명사',
+                category: '주거/경제',
+                meaning: '집을 빌릴 때 미리 내는 큰 돈',
+                example: '이 집의 보증금은 천만 원입니다.',
+                translations: {
+                    en: { word: 'deposit', pronunciation: 'dɪˈpɑːzɪt' },
+                    zh: { word: '保证金', pronunciation: 'bǎozhèngjīn' },
+                    vi: { word: 'tiền đặt cọc', pronunciation: 'tiền đặt cọc' },
+                    th: { word: 'เงินมัดจำ', pronunciation: 'ngən-mát-jam' },
+                    ja: { word: '保証金', pronunciation: 'hoshoukin' },
+                    mn: { word: 'барьцаа', pronunciation: 'baritsaa' },
+                    ru: { word: 'залог', pronunciation: 'zalog' },
+                    uz: { word: 'depozit', pronunciation: 'depozit' }
+                }
+            },
+            '월세': {
+                pronunciation: '월세 [월쎄]',
+                type: '명사',
+                category: '주거/경제',
+                meaning: '매달 내는 집 임대료',
+                example: '월세는 매월 25일까지 내야 합니다.',
+                translations: {
+                    en: { word: 'monthly rent', pronunciation: 'ˈmʌnθli rent' },
+                    zh: { word: '月租', pronunciation: 'yuèzū' },
+                    vi: { word: 'tiền thuê nhà hàng tháng', pronunciation: 'tiền thuê nhà hàng tháng' },
+                    th: { word: 'ค่าเช่ารายเดือน', pronunciation: 'khâa-châo-raai-dɯan' },
+                    ja: { word: '月貸し', pronunciation: 'tsukigashi' },
+                    mn: { word: 'сарын түрээс', pronunciation: 'saryn türees' },
+                    ru: { word: 'месячная аренда', pronunciation: 'mesyachnaya arenda' },
+                    uz: { word: 'oylik ijara', pronunciation: 'oylik ijara' }
+                }
+            },
+            '통장': {
+                pronunciation: '통장 [통장]',
+                type: '명사',
+                category: '금융',
+                meaning: '은행에서 돈을 넣고 빼는 기록을 적는 책',
+                example: '통장을 만들려면 신분증이 필요합니다.',
+                translations: {
+                    en: { word: 'bankbook', pronunciation: 'ˈbæŋkbʊk' },
+                    zh: { word: '存折', pronunciation: 'cúnzhé' },
+                    vi: { word: 'sổ tiết kiệm', pronunciation: 'sổ tiết kiệm' },
+                    th: { word: 'สมุดบัญชี', pronunciation: 'sà-mùt-ban-chii' },
+                    ja: { word: '通帳', pronunciation: 'tsūchō' },
+                    mn: { word: 'дансны дэвтэр', pronunciation: 'dansny devter' },
+                    ru: { word: 'сберкнижка', pronunciation: 'sberknizhka' },
+                    uz: { word: 'bank daftari', pronunciation: 'bank daftari' }
+                }
+            },
+            '송금': {
+                pronunciation: '송금 [송금]',
+                type: '명사',
+                category: '금융',
+                meaning: '돈을 다른 사람에게 보내는 것',
+                example: '고향에 송금하려면 수수료가 필요합니다.',
+                translations: {
+                    en: { word: 'remittance', pronunciation: 'rɪˈmɪtəns' },
+                    zh: { word: '汇款', pronunciation: 'huìkuǎn' },
+                    vi: { word: 'chuyển tiền', pronunciation: 'chuyển tiền' },
+                    th: { word: 'การโอนเงิน', pronunciation: 'gaan-oon-ngən' },
+                    ja: { word: '送金', pronunciation: 'soukin' },
+                    mn: { word: 'мөнгө шилжүүлэх', pronunciation: 'möngö shiljüülekh' },
+                    ru: { word: 'денежный перевод', pronunciation: 'denezhnyy perevod' },
+                    uz: { word: 'pul o\'tkazma', pronunciation: 'pul o\'tkazma' }
+                }
+            },
+            '급여': {
+                pronunciation: '급여 [그벼]',
+                type: '명사',
+                category: '직장',
+                meaning: '일한 대가로 받는 돈, 월급',
+                example: '급여는 매월 25일에 지급됩니다.',
+                translations: {
+                    en: { word: 'salary/wage', pronunciation: 'ˈsæləri/weɪdʒ' },
+                    zh: { word: '工资', pronunciation: 'gōngzī' },
+                    vi: { word: 'lương', pronunciation: 'lương' },
+                    th: { word: 'เงินเดือน', pronunciation: 'ngən-dɯan' },
+                    ja: { word: '給与', pronunciation: 'kyūyo' },
+                    mn: { word: 'цалин', pronunciation: 'tsalin' },
+                    ru: { word: 'зарплата', pronunciation: 'zarplata' },
+                    uz: { word: 'maosh', pronunciation: 'maosh' }
+                }
+            },
+            '퇴직금': {
+                pronunciation: '퇴직금 [퇴직끔/퉤직끔]',
+                type: '명사',
+                category: '직장',
+                meaning: '회사를 그만둘 때 받는 돈',
+                example: '1년 이상 일하면 퇴직금을 받을 수 있습니다.',
+                translations: {
+                    en: { word: 'severance pay', pronunciation: 'ˈsevərəns peɪ' },
+                    zh: { word: '退职金', pronunciation: 'tuìzhíjīn' },
+                    vi: { word: 'trợ cấp thôi việc', pronunciation: 'trợ cấp thôi việc' },
+                    th: { word: 'เงินชดเชย', pronunciation: 'ngən-chót-chəəi' },
+                    ja: { word: '退職金', pronunciation: 'taishokukin' },
+                    mn: { word: 'тэтгэмж', pronunciation: 'tetgemj' },
+                    ru: { word: 'выходное пособие', pronunciation: 'vykhodnoye posobiye' },
+                    uz: { word: 'ishdan bo\'shash puli', pronunciation: 'ishdan bo\'shash puli' }
+                }
+            },
+            '연장근무': {
+                pronunciation: '연장근무 [연장근무]',
+                type: '명사',
+                category: '직장',
+                meaning: '정해진 시간보다 더 오래 일하는 것',
+                example: '연장근무를 하면 추가 수당을 받습니다.',
+                translations: {
+                    en: { word: 'overtime work', pronunciation: 'ˈoʊvərtaɪm wɜːrk' },
+                    zh: { word: '加班', pronunciation: 'jiābān' },
+                    vi: { word: 'làm thêm giờ', pronunciation: 'làm thêm giờ' },
+                    th: { word: 'ทำงานล่วงเวลา', pronunciation: 'tham-ngaan-lûang-wee-laa' },
+                    ja: { word: '残業', pronunciation: 'zangyō' },
+                    mn: { word: 'илүү цаг', pronunciation: 'ilüü tsag' },
+                    ru: { word: 'сверхурочная работа', pronunciation: 'sverkheurochnaya rabota' },
+                    uz: { word: 'qo\'shimcha ish', pronunciation: 'qo\'shimcha ish' }
+                }
+            },
+            '어린이집': {
+                pronunciation: '어린이집 [어리니집]',
+                type: '명사',
+                category: '교육/육아',
+                meaning: '영유아를 돌보고 교육하는 기관',
+                example: '아이를 어린이집에 보내려면 신청해야 합니다.',
+                translations: {
+                    en: { word: 'daycare center', pronunciation: 'ˈdeɪker ˈsentər' },
+                    zh: { word: '托儿所', pronunciation: 'tuō\'érsuo' },
+                    vi: { word: 'nhà trẻ', pronunciation: 'nhà trẻ' },
+                    th: { word: 'ศูนย์เด็กเล็ก', pronunciation: 'sǔun-dèk-lék' },
+                    ja: { word: '保育園', pronunciation: 'hoikuen' },
+                    mn: { word: 'цэцэрлэг', pronunciation: 'tsetsrleg' },
+                    ru: { word: 'детский сад', pronunciation: 'detskiy sad' },
+                    uz: { word: 'bolalar bog\'chasi', pronunciation: 'bolalar bog\'chasi' }
+                }
+            },
+            '예방접종': {
+                pronunciation: '예방접종 [예방접쫑]',
+                type: '명사',
+                category: '의료/복지',
+                meaning: '병을 막기 위해 미리 맞는 주사',
+                example: '아이들은 예방접종을 꼭 맞아야 합니다.',
+                translations: {
+                    en: { word: 'vaccination', pronunciation: 'ˌvæksɪˈneɪʃən' },
+                    zh: { word: '预防接种', pronunciation: 'yùfáng jiēzhòng' },
+                    vi: { word: 'tiêm phòng', pronunciation: 'tiêm phòng' },
+                    th: { word: 'การฉีดวัคซีน', pronunciation: 'gaan-chìit-wák-siin' },
+                    ja: { word: '予防接種', pronunciation: 'yobou sesshu' },
+                    mn: { word: 'урьдчилан сэргийлэх тарилга', pronunciation: 'urdchilan sergiilex tarilga' },
+                    ru: { word: 'прививка', pronunciation: 'privivka' },
+                    uz: { word: 'emlash', pronunciation: 'emlash' }
+                }
+            },
+            '진료': {
+                pronunciation: '진료 [질료]',
+                type: '명사',
+                category: '의료/복지',
+                meaning: '의사가 환자를 보고 치료하는 것',
+                example: '진료를 받으려면 접수를 먼저 해야 합니다.',
+                translations: {
+                    en: { word: 'medical treatment', pronunciation: 'ˈmedɪkəl ˈtriːtmənt' },
+                    zh: { word: '诊疗', pronunciation: 'zhěnliáo' },
+                    vi: { word: 'khám bệnh', pronunciation: 'khám bệnh' },
+                    th: { word: 'การรักษา', pronunciation: 'gaan-rák-sǎa' },
+                    ja: { word: '診療', pronunciation: 'shinryō' },
+                    mn: { word: 'эмчилгээ', pronunciation: 'emchilgee' },
+                    ru: { word: 'медицинский осмотр', pronunciation: 'meditsinskiy osmotr' },
+                    uz: { word: 'davolanish', pronunciation: 'davolanish' }
+                }
+            },
+            '처방전': {
+                pronunciation: '처방전 [처방전]',
+                type: '명사',
+                category: '의료/복지',
+                meaning: '의사가 약을 사도록 써주는 종이',
+                example: '약국에서 약을 사려면 처방전이 필요합니다.',
+                translations: {
+                    en: { word: 'prescription', pronunciation: 'prɪˈskrɪpʃən' },
+                    zh: { word: '处方', pronunciation: 'chǔfāng' },
+                    vi: { word: 'đơn thuốc', pronunciation: 'đơn thuốc' },
+                    th: { word: 'ใบสั่งยา', pronunciation: 'bai-sàng-yaa' },
+                    ja: { word: '処方箋', pronunciation: 'shohousen' },
+                    mn: { word: 'жор', pronunciation: 'jor' },
+                    ru: { word: 'рецепт', pronunciation: 'retsept' },
+                    uz: { word: 'retsept', pronunciation: 'retsept' }
+                }
+            },
+            '분리수거': {
+                pronunciation: '분리수거 [불리수거]',
+                type: '명사',
+                category: '일상생활',
+                meaning: '쓰레기를 종류별로 나누어 버리는 것',
+                example: '한국에서는 분리수거를 꼭 해야 합니다.',
+                translations: {
+                    en: { word: 'waste separation', pronunciation: 'weɪst ˌsepəˈreɪʃən' },
+                    zh: { word: '垃圾分类', pronunciation: 'lājī fēnlèi' },
+                    vi: { word: 'phân loại rác', pronunciation: 'phân loại rác' },
+                    th: { word: 'การแยกขยะ', pronunciation: 'gaan-yɛ̂ɛk-khà-yà' },
+                    ja: { word: '分別収集', pronunciation: 'bunbetsu shūshū' },
+                    mn: { word: 'хог хаягдлыг ангилах', pronunciation: 'khog khayagdlyg angilakh' },
+                    ru: { word: 'раздельный сбор мусора', pronunciation: 'razdelnyy sbor musora' },
+                    uz: { word: 'chiqindilarni ajratish', pronunciation: 'chiqindilarni ajratish' }
+                }
+            },
+            '관리비': {
+                pronunciation: '관리비 [괄리비]',
+                type: '명사',
+                category: '주거/경제',
+                meaning: '아파트나 건물을 관리하는 비용',
+                example: '관리비는 월세와 별도로 내야 합니다.',
+                translations: {
+                    en: { word: 'maintenance fee', pronunciation: 'ˈmeɪntənəns fiː' },
+                    zh: { word: '管理费', pronunciation: 'guǎnlǐfèi' },
+                    vi: { word: 'phí quản lý', pronunciation: 'phí quản lý' },
+                    th: { word: 'ค่าส่วนกลาง', pronunciation: 'khâa-sùan-glaang' },
+                    ja: { word: '管理費', pronunciation: 'kanrihi' },
+                    mn: { word: 'удирдлагын төлбөр', pronunciation: 'udirdlagyn tölbör' },
+                    ru: { word: 'коммунальные платежи', pronunciation: 'kommunalnye platezhi' },
+                    uz: { word: 'boshqaruv to\'lovi', pronunciation: 'boshqaruv to\'lovi' }
+                }
+            },
+            '전입신고': {
+                pronunciation: '전입신고 [저닙신고]',
+                type: '명사',
+                category: '법률/행정',
+                meaning: '이사한 곳의 주소를 신고하는 것',
+                example: '이사 후 14일 이내에 전입신고를 해야 합니다.',
+                translations: {
+                    en: { word: 'moving-in report', pronunciation: 'ˈmuːvɪŋ ɪn rɪˈpɔːrt' },
+                    zh: { word: '迁入申报', pronunciation: 'qiānrù shēnbào' },
+                    vi: { word: 'đăng ký tạm trú', pronunciation: 'đăng ký tạm trú' },
+                    th: { word: 'แจ้งย้ายเข้า', pronunciation: 'jɛ̂ɛng-yáai-khâo' },
+                    ja: { word: '転入届', pronunciation: 'tennyuu todoke' },
+                    mn: { word: 'шилжин ирсэн мэдэгдэл', pronunciation: 'shiljin irsen medegdel' },
+                    ru: { word: 'регистрация по месту жительства', pronunciation: 'registratsiya po mestu zhitelstva' },
+                    uz: { word: 'ko\'chib kelish haqida xabar', pronunciation: 'ko\'chib kelish haqida xabar' }
+                }
+            },
+            '밥 먹었어?': {
+                pronunciation: '밥 먹었어? [밤 머거써?]',
+                type: '관용 표현',
+                category: '문화적 표현',
+                meaning: '안부를 묻는 인사말 (실제로 식사 여부를 묻는 것이 아님)',
+                example: '친구를 만나면 "밥 먹었어?"라고 인사합니다.',
+                translations: {
+                    en: { word: 'How are you? / How have you been?', pronunciation: 'haʊ ɑːr juː' },
+                    zh: { word: '你好吗？/ 最近怎么样？', pronunciation: 'nǐ hǎo ma / zuìjìn zěnmeyàng' },
+                    vi: { word: 'Bạn khỏe không? / Dạo này thế nào?', pronunciation: 'bạn khỏe không' },
+                    th: { word: 'สบายดีไหม / เป็นอย่างไรบ้าง', pronunciation: 'sà-baai-dii-mǎi' },
+                    ja: { word: '元気？/ 最近どう？', pronunciation: 'genki / saikin dou' },
+                    mn: { word: 'сайн байна уу?', pronunciation: 'sain baina uu' },
+                    ru: { word: 'Как дела? / Как поживаешь?', pronunciation: 'kak dela' },
+                    uz: { word: 'Qalaysiz? / Ahvolingiz qalay?', pronunciation: 'qalaysiz' }
+                }
+            },
+            '다음에 밥 한번 먹자': {
+                pronunciation: '다음에 밥 한번 먹자 [다으메 밥 한번 먹짜]',
+                type: '관용 표현',
+                category: '문화적 표현',
+                meaning: '나중에 만나자는 사교적 인사 (실제 약속이 아닐 수도 있음)',
+                example: '헤어질 때 "다음에 밥 한번 먹자"라고 말했지만 연락은 없었다.',
+                translations: {
+                    en: { word: "Let's catch up sometime", pronunciation: 'lets kætʃ ʌp ˈsʌmtaɪm' },
+                    zh: { word: '改天一起吃饭吧（客套话）', pronunciation: 'gǎitiān yīqǐ chīfàn ba' },
+                    vi: { word: 'Hẹn gặp lại sau nhé (lời nói xã giao)', pronunciation: 'hẹn gặp lại sau nhé' },
+                    th: { word: 'ไว้เจอกันใหม่นะ', pronunciation: 'wái-jəə-gan-mài-ná' },
+                    ja: { word: 'また今度会いましょう', pronunciation: 'mata kondo aimashou' },
+                    mn: { word: 'дараа уулзъя', pronunciation: 'daraa uulzya' },
+                    ru: { word: 'Давай как-нибудь встретимся', pronunciation: 'davay kak-nibud\' vstretimsya' },
+                    uz: { word: 'Keyinroq uchrashaylik', pronunciation: 'keyinroq uchrashaylik' }
+                }
+            },
+            '죽겠다': {
+                pronunciation: '죽겠다 [죽껟따]',
+                type: '관용 표현',
+                category: '감정 표현',
+                meaning: '매우 힘들다, 괴롭다 (실제로 죽는다는 뜻이 아님)',
+                example: '오늘 너무 바빠서 죽겠다.',
+                translations: {
+                    en: { word: "I'm dying (from exhaustion/stress)", pronunciation: 'aɪm ˈdaɪɪŋ' },
+                    zh: { word: '累死了 / 忙死了', pronunciation: 'lèi sǐ le / máng sǐ le' },
+                    vi: { word: 'Mệt muốn chết / Bận muốn chết', pronunciation: 'mệt muốn chết' },
+                    th: { word: 'เหนื่อยจะตาย', pronunciation: 'nɯ̀ai-jà-taai' },
+                    ja: { word: '死にそう（疲れて）', pronunciation: 'shini sou' },
+                    mn: { word: 'үхэх гэж байна', pronunciation: 'ükhekh gej baina' },
+                    ru: { word: 'Умираю (от усталости)', pronunciation: 'umirayu' },
+                    uz: { word: 'O\'lib ketayapman (charchadim)', pronunciation: 'o\'lib ketayapman' }
+                }
+            },
+            '아니에요': {
+                pronunciation: '아니에요 [아니에요]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '겸손하게 거절하거나 칭찬을 받을 때 쓰는 말',
+                example: '"한국어 잘하시네요." "아니에요, 아직 많이 부족해요."',
+                translations: {
+                    en: { word: "No, not really (modest response)", pronunciation: 'noʊ nɑt ˈrɪəli' },
+                    zh: { word: '哪里哪里（谦虚）', pronunciation: 'nǎlǐ nǎlǐ' },
+                    vi: { word: 'Không đâu (khiêm tốn)', pronunciation: 'không đâu' },
+                    th: { word: 'ไม่หรอกค่ะ/ครับ', pronunciation: 'mâi-ròok-khâ/khráp' },
+                    ja: { word: 'いえいえ（謙遜）', pronunciation: 'ie ie' },
+                    mn: { word: 'үгүй ээ', pronunciation: 'ügüi ee' },
+                    ru: { word: 'Да что вы (скромность)', pronunciation: 'da chto vy' },
+                    uz: { word: 'Yo\'q, unday emas (kamtarlik)', pronunciation: 'yo\'q unday emas' }
+                }
+            },
+            '괜찮아요': {
+                pronunciation: '괜찮아요 [괜차나요]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '거절할 때, 용서할 때, 위로할 때 등 다양하게 쓰는 말',
+                example: '"도와드릴까요?" "괜찮아요." (거절의 의미)',
+                translations: {
+                    en: { word: "It's okay / No thanks / I'm fine", pronunciation: 'ɪts oʊˈkeɪ' },
+                    zh: { word: '没关系 / 不用了', pronunciation: 'méi guānxi / bùyòng le' },
+                    vi: { word: 'Không sao / Không cần', pronunciation: 'không sao' },
+                    th: { word: 'ไม่เป็นไร', pronunciation: 'mâi-pen-rai' },
+                    ja: { word: '大丈夫です', pronunciation: 'daijoubu desu' },
+                    mn: { word: 'зүгээр', pronunciation: 'zügeer' },
+                    ru: { word: 'Ничего / Не надо', pronunciation: 'nichevo / ne nado' },
+                    uz: { word: 'Hech gap yo\'q / Kerak emas', pronunciation: 'hech gap yo\'q' }
+                }
+            },
+            '혹시': {
+                pronunciation: '혹시 [혹씨]',
+                type: '부사',
+                category: '대화 표현',
+                meaning: '조심스럽게 물어볼 때 쓰는 말',
+                example: '혹시 시간 있으세요?',
+                translations: {
+                    en: { word: 'By any chance / Perhaps', pronunciation: 'baɪ ˈeni tʃæns' },
+                    zh: { word: '请问 / 不知道', pronunciation: 'qǐngwèn / bù zhīdào' },
+                    vi: { word: 'Có thể / Xin hỏi', pronunciation: 'có thể' },
+                    th: { word: 'เผื่อว่า / ขอถามหน่อย', pronunciation: 'phɯ̀a-wâa' },
+                    ja: { word: 'もしかして', pronunciation: 'moshikashite' },
+                    mn: { word: 'магадгүй', pronunciation: 'magadgüi' },
+                    ru: { word: 'Случайно не / Может быть', pronunciation: 'sluchayno ne' },
+                    uz: { word: 'Balki / Mumkinmi', pronunciation: 'balki' }
+                }
+            },
+            '수고하세요': {
+                pronunciation: '수고하세요 [수고하세요]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '일하는 사람에게 하는 인사 또는 헤어질 때 인사',
+                example: '편의점을 나가면서 "수고하세요"라고 인사했다.',
+                translations: {
+                    en: { word: 'Keep up the good work / Goodbye', pronunciation: 'kiːp ʌp ðə gʊd wɜːrk' },
+                    zh: { word: '辛苦了 / 慢走', pronunciation: 'xīnkǔ le / màn zǒu' },
+                    vi: { word: 'Cố gắng nhé / Tạm biệt', pronunciation: 'cố gắng nhé' },
+                    th: { word: 'สู้ๆ / ลาก่อน', pronunciation: 'sûu-sûu' },
+                    ja: { word: 'お疲れ様です', pronunciation: 'otsukaresama desu' },
+                    mn: { word: 'амжилт хүсье', pronunciation: 'amjilt khüsye' },
+                    ru: { word: 'Удачи в работе / До свидания', pronunciation: 'udachi v rabote' },
+                    uz: { word: 'Yaxshi ishlar / Xayr', pronunciation: 'yaxshi ishlar' }
+                }
+            },
+            '빨리빨리': {
+                pronunciation: '빨리빨리 [빨리빨리]',
+                type: '부사',
+                category: '문화적 표현',
+                meaning: '한국의 급한 문화를 나타내는 말',
+                example: '한국 사람들은 "빨리빨리"를 자주 말한다.',
+                translations: {
+                    en: { word: 'Hurry hurry / Quickly quickly', pronunciation: 'ˈhɜːri ˈhɜːri' },
+                    zh: { word: '快快快', pronunciation: 'kuài kuài kuài' },
+                    vi: { word: 'Nhanh nhanh lên', pronunciation: 'nhanh nhanh lên' },
+                    th: { word: 'เร็วๆ', pronunciation: 'rew-rew' },
+                    ja: { word: '早く早く', pronunciation: 'hayaku hayaku' },
+                    mn: { word: 'хурдан хурдан', pronunciation: 'khurdan khurdan' },
+                    ru: { word: 'Быстро-быстро', pronunciation: 'bystro-bystro' },
+                    uz: { word: 'Tez-tez', pronunciation: 'tez-tez' }
+                }
+            },
+            '대충': {
+                pronunciation: '대충 [대충]',
+                type: '부사',
+                category: '일상 표현',
+                meaning: '대략적으로, 꼼꼼하지 않게',
+                example: '시간이 없어서 대충 했어요.',
+                translations: {
+                    en: { word: 'Roughly / Carelessly', pronunciation: 'ˈrʌfli' },
+                    zh: { word: '大概 / 马马虎虎', pronunciation: 'dàgài / mǎmǎhǔhǔ' },
+                    vi: { word: 'Đại khái / Qua loa', pronunciation: 'đại khái' },
+                    th: { word: 'คร่าวๆ', pronunciation: 'khrâao-khrâao' },
+                    ja: { word: '大体 / 適当に', pronunciation: 'daitai / tekitou ni' },
+                    mn: { word: 'ойролцоогоор', pronunciation: 'oiroltsoogoor' },
+                    ru: { word: 'Примерно / Кое-как', pronunciation: 'primerno' },
+                    uz: { word: 'Taxminan / Shay-pay', pronunciation: 'taxminan' }
+                }
+            },
+            '그냥': {
+                pronunciation: '그냥 [그냥]',
+                type: '부사',
+                category: '일상 표현',
+                meaning: '특별한 이유 없이, 그대로',
+                example: '"왜 왔어?" "그냥..."',
+                translations: {
+                    en: { word: 'Just / For no reason', pronunciation: 'dʒʌst' },
+                    zh: { word: '就是 / 没什么', pronunciation: 'jiùshì / méi shénme' },
+                    vi: { word: 'Chỉ là / Không có gì', pronunciation: 'chỉ là' },
+                    th: { word: 'เฉยๆ', pronunciation: 'chə̌əi-chə̌əi' },
+                    ja: { word: 'ただ / 何となく', pronunciation: 'tada / nantonaku' },
+                    mn: { word: 'зүгээр', pronunciation: 'zügeer' },
+                    ru: { word: 'Просто так', pronunciation: 'prosto tak' },
+                    uz: { word: 'Shunchaki', pronunciation: 'shunchaki' }
+                }
+            },
+            '우리': {
+                pronunciation: '우리 [우리]',
+                type: '대명사',
+                category: '문화적 표현',
+                meaning: '나/내 대신 자주 쓰는 말 (우리 엄마, 우리 회사 등)',
+                example: '우리 엄마가 전화했어. (내 엄마가 전화했어)',
+                translations: {
+                    en: { word: 'Our/My (collective expression)', pronunciation: 'aʊər/maɪ' },
+                    zh: { word: '我们的/我的（集体表达）', pronunciation: 'wǒmen de / wǒ de' },
+                    vi: { word: 'Của chúng ta/Của tôi', pronunciation: 'của chúng ta' },
+                    th: { word: 'ของเรา/ของฉัน', pronunciation: 'khɔ̌ɔng-rao' },
+                    ja: { word: '私たちの/私の', pronunciation: 'watashitachi no / watashi no' },
+                    mn: { word: 'манай', pronunciation: 'manai' },
+                    ru: { word: 'Наш/Мой', pronunciation: 'nash/moy' },
+                    uz: { word: 'Bizning/Mening', pronunciation: 'bizning/mening' }
+                }
+            },
+            '눈치': {
+                pronunciation: '눈치 [눈치]',
+                type: '명사',
+                category: '문화적 표현',
+                meaning: '상황을 파악하는 능력, 남의 기분을 살피는 것',
+                example: '눈치가 빠른 사람은 분위기를 잘 읽는다.',
+                translations: {
+                    en: { word: 'Social awareness / Reading the room', pronunciation: 'ˈsoʊʃəl əˈwernəs' },
+                    zh: { word: '察言观色 / 眼色', pronunciation: 'chá yán guān sè' },
+                    vi: { word: 'Sự tinh ý / Nhạy cảm', pronunciation: 'sự tinh ý' },
+                    th: { word: 'การสังเกต', pronunciation: 'gaan-sǎng-gèet' },
+                    ja: { word: '空気を読む', pronunciation: 'kuuki wo yomu' },
+                    mn: { word: 'ойлгоц', pronunciation: 'oilgots' },
+                    ru: { word: 'Чутье / Такт', pronunciation: 'chutyё' },
+                    uz: { word: 'Sezgirlik', pronunciation: 'sezgirlik' }
+                }
+            },
+            '정': {
+                pronunciation: '정 [정]',
+                type: '명사',
+                category: '문화적 표현',
+                meaning: '한국 특유의 인간적인 따뜻한 마음',
+                example: '한국 사람들은 정이 많다.',
+                translations: {
+                    en: { word: 'Emotional bond / Affection', pronunciation: 'ɪˈmoʊʃənəl bɑːnd' },
+                    zh: { word: '情分 / 人情味', pronunciation: 'qíngfèn / rénqíngwèi' },
+                    vi: { word: 'Tình cảm / Nghĩa tình', pronunciation: 'tình cảm' },
+                    th: { word: 'น้ำใจ', pronunciation: 'nám-jai' },
+                    ja: { word: '情（じょう）', pronunciation: 'jou' },
+                    mn: { word: 'халуун сэтгэл', pronunciation: 'khaluun setgel' },
+                    ru: { word: 'Душевность / Теплота', pronunciation: 'dushevnost\'' },
+                    uz: { word: 'Mehr / Iliqlik', pronunciation: 'mehr' }
+                }
+            },
+            '약속 시간': {
+                pronunciation: '약속 시간 [약쏙 시간]',
+                type: '명사구',
+                category: '문화적 표현',
+                meaning: '만나기로 한 시간 (한국에서는 정확히 지키는 것이 중요)',
+                example: '한국에서는 약속 시간을 꼭 지켜야 해요.',
+                translations: {
+                    en: { word: 'Appointment time (punctuality important)', pronunciation: 'əˈpɔɪntmənt taɪm' },
+                    zh: { word: '约定时间（要准时）', pronunciation: 'yuēdìng shíjiān' },
+                    vi: { word: 'Giờ hẹn (phải đúng giờ)', pronunciation: 'giờ hẹn' },
+                    th: { word: 'เวลานัด', pronunciation: 'wee-laa-nát' },
+                    ja: { word: '約束の時間', pronunciation: 'yakusoku no jikan' },
+                    mn: { word: 'уулзах цаг', pronunciation: 'uulzakh tsag' },
+                    ru: { word: 'Время встречи', pronunciation: 'vremya vstrechi' },
+                    uz: { word: 'Uchrashuv vaqti', pronunciation: 'uchrashuv vaqti' }
+                }
+            },
+            '다 됐어요?': {
+                pronunciation: '다 됐어요? [다 돼써요?]',
+                type: '관용 표현',
+                category: '일상 표현',
+                meaning: '음식점에서 주문할 준비가 되었는지 묻는 말',
+                example: '직원이 "다 됐어요?"라고 물으면 주문할 준비가 되었는지 묻는 것이다.',
+                translations: {
+                    en: { word: 'Are you ready to order?', pronunciation: 'ɑːr juː ˈredi tuː ˈɔːrdər' },
+                    zh: { word: '可以点餐了吗？', pronunciation: 'kěyǐ diǎncān le ma' },
+                    vi: { word: 'Đã chọn xong chưa?', pronunciation: 'đã chọn xong chưa' },
+                    th: { word: 'พร้อมสั่งหรือยัง', pronunciation: 'phrɔ́ɔm-sàng-rɯ̌ɯ-yang' },
+                    ja: { word: 'ご注文はお決まりですか', pronunciation: 'go-chuumon wa okimari desu ka' },
+                    mn: { word: 'захиалга өгөхөд бэлэн үү?', pronunciation: 'zakhialga ögökhöd belen üü' },
+                    ru: { word: 'Готовы сделать заказ?', pronunciation: 'gotovy sdelat\' zakaz' },
+                    uz: { word: 'Buyurtma berishga tayyormisiz?', pronunciation: 'buyurtma berishga tayyormisiz' }
+                }
+            },
+            '잘 먹겠습니다': {
+                pronunciation: '잘 먹겠습니다 [잘 먹껟씀니다]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '식사 전에 하는 인사 (음식을 준비한 사람에게 감사 표현)',
+                example: '밥을 먹기 전에 "잘 먹겠습니다"라고 인사한다.',
+                translations: {
+                    en: { word: 'Thank you for the meal (before eating)', pronunciation: 'θæŋk juː fɔːr ðə miːl' },
+                    zh: { word: '我开动了', pronunciation: 'wǒ kāidòng le' },
+                    vi: { word: 'Xin phép được ăn', pronunciation: 'xin phép được ăn' },
+                    th: { word: 'ขอตัวทานข้าว', pronunciation: 'khɔ̌ɔ-tua-thaan-khâao' },
+                    ja: { word: 'いただきます', pronunciation: 'itadakimasu' },
+                    mn: { word: 'сайхан хооллоё', pronunciation: 'saikhan khoolloyo' },
+                    ru: { word: 'Приятного аппетита (себе)', pronunciation: 'priyatnogo appetita' },
+                    uz: { word: 'Yoqimli ishtaha', pronunciation: 'yoqimli ishtaha' }
+                }
+            },
+            '잘 먹었습니다': {
+                pronunciation: '잘 먹었습니다 [잘 머걷씀니다]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '식사 후에 하는 인사 (음식을 준비한 사람에게 감사 표현)',
+                example: '밥을 다 먹고 "잘 먹었습니다"라고 인사한다.',
+                translations: {
+                    en: { word: 'Thank you for the meal (after eating)', pronunciation: 'θæŋk juː fɔːr ðə miːl' },
+                    zh: { word: '我吃饱了 / 多谢款待', pronunciation: 'wǒ chī bǎo le' },
+                    vi: { word: 'Cảm ơn bữa ăn ngon', pronunciation: 'cảm ơn bữa ăn ngon' },
+                    th: { word: 'อิ่มแล้วครับ/ค่ะ', pronunciation: 'ìm-lɛ́ɛo-khráp/khâ' },
+                    ja: { word: 'ごちそうさまでした', pronunciation: 'gochisousama deshita' },
+                    mn: { word: 'баярлалаа, амттай байлаа', pronunciation: 'bayarlalaa, amttai bailaa' },
+                    ru: { word: 'Спасибо, было вкусно', pronunciation: 'spasibo, bylo vkusno' },
+                    uz: { word: 'Rahmat, juda mazali bo\'ldi', pronunciation: 'rahmat, juda mazali bo\'ldi' }
+                }
+            },
+            '어떻게 오셨어요?': {
+                pronunciation: '어떻게 오셨어요? [어떠케 오셔써요?]',
+                type: '관용 표현',
+                category: '대화 표현',
+                meaning: '방문 목적을 묻는 말 (교통수단을 묻는 게 아님)',
+                example: '가게에 들어가면 "어떻게 오셨어요?"라고 묻는다.',
+                translations: {
+                    en: { word: 'How can I help you? / What brings you here?', pronunciation: 'haʊ kæn aɪ help juː' },
+                    zh: { word: '有什么可以帮您的？', pronunciation: 'yǒu shénme kěyǐ bāng nín de' },
+                    vi: { word: 'Có việc gì ạ?', pronunciation: 'có việc gì ạ' },
+                    th: { word: 'มีอะไรให้ช่วยไหม', pronunciation: 'mii-à-rai-hâi-chûai-mǎi' },
+                    ja: { word: 'どのようなご用件ですか', pronunciation: 'dono you na go-youken desu ka' },
+                    mn: { word: 'ямар асуудлаар ирсэн бэ?', pronunciation: 'yamar asuudlaar irsen be' },
+                    ru: { word: 'Чем могу помочь?', pronunciation: 'chem mogu pomoch\'' },
+                    uz: { word: 'Nima xizmat?', pronunciation: 'nima xizmat' }
+                }
+            },
+            '사양할게요': {
+                pronunciation: '사양할게요 [사양할께요]',
+                type: '관용 표현',
+                category: '예의 표현',
+                meaning: '정중하게 거절하는 표현',
+                example: '"한 잔 더 드릴까요?" "사양할게요."',
+                translations: {
+                    en: { word: 'I\'ll pass / No thank you (polite refusal)', pronunciation: 'aɪl pæs' },
+                    zh: { word: '不用了，谢谢（礼貌拒绝）', pronunciation: 'bùyòng le, xièxiè' },
+                    vi: { word: 'Xin phép từ chối (lịch sự)', pronunciation: 'xin phép từ chối' },
+                    th: { word: 'ขอตัวก่อน', pronunciation: 'khɔ̌ɔ-tua-gɔ̀ɔn' },
+                    ja: { word: '遠慮します', pronunciation: 'enryo shimasu' },
+                    mn: { word: 'татгалзаж байна', pronunciation: 'tatgalzaj baina' },
+                    ru: { word: 'Спасибо, воздержусь', pronunciation: 'spasibo, vozderzhus\'' },
+                    uz: { word: 'Rahmat, kerak emas', pronunciation: 'rahmat, kerak emas' }
+                }
+            },
+            '애쓰다': {
+                pronunciation: '애쓰다 [애쓰다]',
+                type: '동사',
+                category: '감정 표현',
+                meaning: '힘들게 노력하다',
+                example: '한국어 공부하느라 애쓰네요.',
+                translations: {
+                    en: { word: 'to make an effort / to try hard', pronunciation: 'tuː meɪk ən ˈefərt' },
+                    zh: { word: '努力 / 辛苦', pronunciation: 'nǔlì / xīnkǔ' },
+                    vi: { word: 'cố gắng / vất vả', pronunciation: 'cố gắng' },
+                    th: { word: 'พยายาม', pronunciation: 'phá-yaa-yaam' },
+                    ja: { word: '苦労する', pronunciation: 'kurou suru' },
+                    mn: { word: 'хичээх', pronunciation: 'khicheekh' },
+                    ru: { word: 'стараться', pronunciation: 'starat\'sya' },
+                    uz: { word: 'tirishmoq', pronunciation: 'tirishmoq' }
+                }
+            },
+            '그만': {
+                pronunciation: '그만 [그만]',
+                type: '부사',
+                category: '일상 표현',
+                meaning: '더 이상 하지 말라는 뜻',
+                example: '이제 그만 하고 쉬세요.',
+                translations: {
+                    en: { word: 'Stop / Enough', pronunciation: 'stɑːp / ɪˈnʌf' },
+                    zh: { word: '别再... / 够了', pronunciation: 'bié zài / gòu le' },
+                    vi: { word: 'Thôi / Đủ rồi', pronunciation: 'thôi' },
+                    th: { word: 'พอแล้ว', pronunciation: 'phɔɔ-lɛ́ɛo' },
+                    ja: { word: 'もうやめて', pronunciation: 'mou yamete' },
+                    mn: { word: 'болих', pronunciation: 'bolikh' },
+                    ru: { word: 'Хватит / Достаточно', pronunciation: 'khvatit' },
+                    uz: { word: 'Bas / Yetarli', pronunciation: 'bas' }
+                }
+            }
+        };
+
+        const languageInfo = {
+            en: { name: '영어', flag: '🇺🇸' },
+            zh: { name: '중국어', flag: '🇨🇳' },
+            vi: { name: '베트남어', flag: '🇻🇳' },
+            th: { name: '태국어', flag: '🇹🇭' },
+            ja: { name: '일본어', flag: '🇯🇵' },
+            mn: { name: '몽골어', flag: '🇲🇳' },
+            ru: { name: '러시아어', flag: '🇷🇺' },
+            uz: { name: '우즈벡어', flag: '🇺🇿' }
+        };
+
+        // 언어 선택 체크박스 이벤트 처리
+        document.querySelectorAll('.language-item input').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.parentElement;
+                if (this.checked) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            });
+        });
+
+        // 초기 선택된 언어 표시
+        document.querySelector('#lang-en').classList.add('selected');
+
+        // 검색 기능
+        function searchWord() {
+            const searchInput = document.getElementById('searchInput').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // 선택된 언어 확인
+            const selectedLanguages = [];
+            document.querySelectorAll('.language-item input:checked').forEach(checkbox => {
+                selectedLanguages.push(checkbox.value);
+            });
+            
+            // 에러 체크
+            if (!searchInput) {
+                showError('한국어 단어를 입력해주세요.');
+                return;
+            }
+            
+            if (selectedLanguages.length === 0) {
+                showError('최소 하나 이상의 언어를 선택해주세요.');
+                return;
+            }
+            
+            // 단어 검색
+            const wordData = vocabulary[searchInput];
+            if (!wordData) {
+                showError(`'${searchInput}'에 대한 정보를 찾을 수 없습니다. 다른 단어를 입력해주세요.`);
+                return;
+            }
+            
+            // 에러 메시지 숨기기
+            errorMessage.style.display = 'none';
+            
+            // 결과 표시
+            displayResults(searchInput, wordData, selectedLanguages);
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            resultsSection.style.display = 'none';
+        }
+
+        function displayResults(word, data, languages) {
+            const resultsSection = document.getElementById('resultsSection');
+            const wordInfo = document.getElementById('wordInfo');
+            const translationsGrid = document.getElementById('translationsGrid');
+            
+            // 한국어 단어 정보 표시
+            wordInfo.innerHTML = `
+                <div class="word-title">${word}</div>
+                <div class="word-pronunciation">${data.pronunciation}</div>
+                <div class="word-tags">
+                    <span class="tag">${data.type}</span>
+                    <span class="tag">${data.category}</span>
+                </div>
+                <div class="word-meaning">${data.meaning}</div>
+                <div class="example-box">
+                    <div class="example-label">예문:</div>
+                    <div>${data.example}</div>
+                </div>
+            `;
+            
+            // 번역 결과 표시
+            translationsGrid.innerHTML = '';
+            languages.forEach(langCode => {
+                const langInfo = languageInfo[langCode];
+                const translation = data.translations[langCode];
+                
+                const card = document.createElement('div');
+                card.className = 'translation-card';
+                card.innerHTML = `
+                    <div class="translation-header">
+                        <span class="flag">${langInfo.flag}</span>
+                        <span class="language-name">${langInfo.name}</span>
+                    </div>
+                    <div class="translation-word">${translation.word}</div>
+                    <div class="translation-pronunciation">[${translation.pronunciation}]</div>
+                `;
+                translationsGrid.appendChild(card);
+            });
+            
+            resultsSection.style.display = 'block';
+        }
+
+        // 사용 가능한 단어 목록 표시
+        function displayAvailableWords() {
+            const container = document.getElementById('availableWords');
+            const categories = {};
+            
+            // 카테고리별로 단어 분류
+            Object.entries(vocabulary).forEach(([word, data]) => {
+                if (!categories[data.category]) {
+                    categories[data.category] = [];
+                }
+                categories[data.category].push(word);
+            });
+            
+            // 카테고리별로 표시
+            Object.entries(categories).forEach(([category, words]) => {
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.textContent = category + ':';
+                section.appendChild(title);
+                
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'word-buttons';
+                
+                words.forEach(word => {
+                    const button = document.createElement('button');
+                    button.className = 'word-button';
+                    button.textContent = word;
+                    button.onclick = () => {
+                        document.getElementById('searchInput').value = word;
+                        searchWord();
+                    };
+                    buttonsContainer.appendChild(button);
+                });
+                
+                section.appendChild(buttonsContainer);
+                container.appendChild(section);
+            });
+        }
+
+        // Enter 키 이벤트
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWord();
+            }
+        });
+
+        // 페이지 로드 시 사용 가능한 단어 표시
+    </script>
+</body>
+</html>
